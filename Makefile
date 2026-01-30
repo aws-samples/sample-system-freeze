@@ -8,6 +8,9 @@ modules:
 monitor: system_freeze_monitor.c
 	gcc -o system_freeze_monitor system_freeze_monitor.c -lpthread
 
+test: monitor
+	./test.sh
+
 clean:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
 	rm -f system_freeze_monitor
