@@ -88,3 +88,45 @@ while true; do
     sleep 5
 done
 ```
+
+## Verifying System Freeze with the Monitor
+
+The `system_freeze_monitor` tool detects and reports latency events, making it
+useful for verifying that the kernel module is working correctly.
+
+### How the Monitor Works
+
+By default, the monitor creates one thread per CPU, with each thread pinned to
+its specific CPU. Each thread continuously reads the system clock and measures
+the time between consecutive reads. Under normal conditions, these intervals
+are very small (microseconds). When a system freeze occurs, the monitor reports
+any time jump that exceeds the configured threshold.
+
+### Build the Monitor
+
+```bash
+make monitor
+```
+
+### Basic Verification Test
+
+Run the monitor with a threshold below your expected freeze duration:
+
+```bash
+# Start monitor (runs for 10 seconds, reports events > 400ms)
+./system_freeze_monitor -t 400 -d 10 &
+
+# Wait for monitor to start
+sleep 2
+
+# Trigger a 500ms freeze
+echo 500 | sudo tee /sys/kernel/debug/system_freeze/duration_ms
+echo 1 | sudo tee /sys/kernel/debug/system_freeze/start
+```
+
+Expected output shows the freeze detected on all CPUs:
+```
+[CPU 0] [2026-01-30 10:49:10] Jump: 500224 us
+[CPU 1] [2026-01-30 10:49:10] Jump: 500237 us
+...
+```
